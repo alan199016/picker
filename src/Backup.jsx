@@ -49,7 +49,7 @@ export default function Backup({ data, onBack, onImport }) {
       <h1>Backup</h1>
       <p className="result-meta">
         Your list is stored only on this device. Export a copy and keep it somewhere else, like
-        iCloud Drive.
+        Google Drive.
       </p>
       <p className="result-meta">
         {lastBackup ? `Last backup: ${timeAgo(lastBackup)}` : 'No backup from this device yet'}
