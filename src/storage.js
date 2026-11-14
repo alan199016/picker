@@ -102,3 +102,19 @@ export function saveLastBackup(date) {
 export function askToKeepStorage() {
   navigator.storage?.persist?.().catch(() => {})
 }
+
+// Which design of the Pick screen to show: '1' or '2'. A preference, like
+// the filters, so it's kept apart from your data and backups.
+const VERSION_KEY = 'restaurant-picker-version'
+
+export function loadVersion() {
+  try {
+    return localStorage.getItem(VERSION_KEY) === '2' ? '2' : '1'
+  } catch {
+    return '1'
+  }
+}
+
+export function saveVersion(version) {
+  localStorage.setItem(VERSION_KEY, version)
+}

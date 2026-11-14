@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react'
-import { loadData, loadFilters, newId, saveData, saveFilters, today } from './storage.js'
+import {
+  loadData,
+  loadFilters,
+  loadVersion,
+  newId,
+  saveData,
+  saveFilters,
+  saveVersion,
+  today,
+} from './storage.js'
 import RestaurantList from './RestaurantList.jsx'
 import RestaurantForm from './RestaurantForm.jsx'
 import Home from './Home.jsx'
+import HomeV2 from './HomeV2.jsx'
+import VersionMenu from './VersionMenu.jsx'
 import RestaurantDetail from './RestaurantDetail.jsx'
 import LaunchPrompt from './LaunchPrompt.jsx'
 import Backup from './Backup.jsx'
@@ -20,6 +31,18 @@ export default function App() {
 
   // Which tab is showing: 'home' or 'list'.
   const [tab, setTab] = useState('home')
+
+  // Which design of the Pick screen to use, and whether the menu for
+  // switching it is open. The choice is remembered on the device.
+  const [version, setVersion] = useState(loadVersion)
+  const [versionMenuOpen, setVersionMenuOpen] = useState(false)
+
+  function chooseVersion(newVersion) {
+    setVersion(newVersion)
+    saveVersion(newVersion)
+    setVersionMenuOpen(false)
+    setTab('home') // show the Pick screen in the version just chosen
+  }
 
   // Which restaurant's detail page is open in the list tab, if any.
   const [viewingId, setViewingId] = useState(null)
@@ -284,12 +307,13 @@ export default function App() {
   }
 
   const viewedPlace = data.restaurants.find((r) => r.id === viewingId)
+  const PickScreen = version === '2' ? HomeV2 : Home
 
   return (
     <div className="app">
       <main className={tab === 'home' ? 'screen home-screen' : 'screen'}>
         {tab === 'home' && (
-          <Home
+          <PickScreen
             restaurants={data.restaurants}
             visits={data.visits}
             matches={matches}
@@ -347,7 +371,21 @@ export default function App() {
         >
           Restaurants
         </button>
+        <button
+          className={versionMenuOpen ? 'active' : ''}
+          onClick={() => setVersionMenuOpen(!versionMenuOpen)}
+        >
+          Version {version}
+        </button>
       </nav>
+
+      {versionMenuOpen && (
+        <VersionMenu
+          version={version}
+          onChoose={chooseVersion}
+          onClose={() => setVersionMenuOpen(false)}
+        />
+      )}
     </div>
   )
 }

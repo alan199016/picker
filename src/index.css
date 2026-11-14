@@ -867,3 +867,325 @@ textarea {
     transform: translateY(100%);
   }
 }
+
+/* --- Version tab menu --- */
+
+/* Keep the tab bar above version 2's full-screen cards. */
+.tabs {
+  z-index: 2;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+/* Floats just above the tab bar, on the right where the Version tab is. */
+.version-menu {
+  position: fixed;
+  right: 12px;
+  bottom: calc(60px + env(safe-area-inset-bottom));
+  width: 270px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
+  transform-origin: bottom right;
+  animation: pop-in 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+}
+
+.version-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+}
+
+.version-option.selected {
+  background: var(--bg);
+}
+
+.version-name {
+  font-weight: 600;
+}
+
+.version-option.selected .version-name {
+  color: var(--accent);
+}
+
+.version-detail {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* --- Pick tab, version 2 --- */
+
+.home-v2 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  /* The app handles swipes itself, so the browser shouldn't scroll or zoom. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* The cards fill the whole screen, behind the title and the hint. */
+.v2-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  /* No rise in this version: the column already moves up. */
+  --lift: 0px;
+}
+
+/* Cards above and below the middle fade out, and are fully gone 32px from
+   the top and bottom edges of the screen. */
+.v2-column {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 32px,
+    #000 calc(50% - var(--card) / 2),
+    #000 calc(50% + var(--card) / 2),
+    transparent calc(100% - 32px)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 32px,
+    #000 calc(50% - var(--card) / 2),
+    #000 calc(50% + var(--card) / 2),
+    transparent calc(100% - 32px)
+  );
+}
+
+/* A column instead of a row, with card 2 in the middle of the screen. */
+.v2-stage .strip {
+  top: calc(50% - var(--card) / 2);
+  flex-direction: column;
+  transform: translateY(calc(-2 * (var(--card) + var(--card-gap))));
+}
+
+.v2-stage .card.drop {
+  animation: fade-away 400ms ease-out forwards;
+}
+
+@keyframes fade-away {
+  to {
+    opacity: 0;
+  }
+}
+
+/* The picked card sits in the middle of the screen as it grows. */
+.v2-stage .hero {
+  top: calc(50% - var(--hero-h) / 2);
+}
+
+.v2-stage .card-back {
+  align-items: center;
+  text-align: center;
+}
+
+/* The card holds Go here too, so long names get 2 lines. Nothing else gets
+   squeezed; if space runs short (on small phones), the notes give way. */
+.v2-stage .card-back > * {
+  flex-shrink: 0;
+}
+
+.v2-stage .card-back h2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.v2-stage .card-notes {
+  width: 100%;
+  flex-shrink: 1;
+  min-height: 0;
+}
+
+/* Spin again's first step: the reveal played backwards. The card shrinks and
+   flips face down while the other cards fade back in. Playing in reverse
+   also flips the easing, so this curve is the reveal's curve mirrored: that
+   way it still starts quickly and settles softly, like the reveal. */
+.hero.unrevealing {
+  animation: lift 700ms cubic-bezier(0.7, 0, 0.7, 0.3) reverse both;
+}
+
+.hero.unrevealing .flip {
+  animation: turn-over 700ms cubic-bezier(0.7, 0, 0.7, 0.3) reverse both;
+}
+
+.v2-stage .card.return {
+  animation: fade-away 400ms ease-in reverse both;
+}
+
+/* Sits just below the picked card. */
+.spin-again {
+  position: absolute;
+  top: calc(50% + var(--grown-h) / 2 + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-go {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.v2-stage .saved-line {
+  margin-top: 14px;
+}
+
+/* Sideways swipes: the card leaves the way you swiped. */
+.hero.exit-right {
+  animation: exit-right 450ms ease-in forwards;
+}
+
+.hero.enter-left {
+  animation: enter-left 500ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes exit-right {
+  to {
+    transform: translate(calc(50vw + 100%), var(--lift)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes enter-left {
+  from {
+    transform: translate(calc(-50vw - 100%), var(--lift)) scale(0.8);
+  }
+}
+
+.v2-header,
+.v2-middle,
+.v2-bottom {
+  position: relative;
+  z-index: 1;
+  transition: opacity 200ms ease;
+  /* These layers sit over the cards. Let taps pass through their empty space
+     to the cards below; only their own buttons and text catch taps. */
+  pointer-events: none;
+}
+
+.v2-header > *,
+.v2-middle > *,
+.v2-bottom > * {
+  pointer-events: auto;
+}
+
+/* Title in the center, Filters pinned to the right. */
+.v2-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+}
+
+.v2-header h1 {
+  margin: 8px 0;
+}
+
+.v2-header .filter-button {
+  position: absolute;
+  right: 0;
+}
+
+.v2-middle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.v2-bottom {
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 12px;
+}
+
+/* Hidden while the cards spin, and nothing in it can be tapped. */
+.quiet {
+  opacity: 0;
+}
+
+.quiet,
+.quiet > * {
+  pointer-events: none;
+}
+
+.swipe-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.swipe-hint svg {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+  animation: nudge-up 1.6s ease-in-out infinite;
+}
+
+/* The chevron bobs gently upward, hinting at the swipe. */
+@keyframes nudge-up {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-hint svg {
+    animation: none;
+  }
+
+  .v2-stage .card.drop,
+  .v2-stage .card.return,
+  .hero.unrevealing,
+  .hero.unrevealing .flip,
+  .hero.exit-right,
+  .hero.enter-left {
+    animation-duration: 1ms;
+  }
+}

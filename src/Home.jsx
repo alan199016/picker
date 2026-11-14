@@ -151,7 +151,7 @@ export default function Home({
 
 // Shown when no restaurant passes the filters. Offers one button per active
 // filter, each saying how many places dropping that filter would bring back.
-function NoMatch({ restaurants, filters, here, onFiltersChange }) {
+export function NoMatch({ restaurants, filters, here, onFiltersChange }) {
   const loosenings = [
     filters.cuisines.length > 0 && { label: 'Any cuisine', filters: { ...filters, cuisines: [] } },
     filters.prices.length > 0 && { label: 'Any price', filters: { ...filters, prices: [] } },
