@@ -1,10 +1,12 @@
-import Filters from './Filters.jsx'
+import { useState } from 'react'
+import CardCarousel from './CardCarousel.jsx'
+import FilterSheet from './FilterSheet.jsx'
 import { NO_FILTERS, passesFilters } from './filters.js'
-import { lastVisitDate, mapsLink, timeAgo } from './pick.js'
 
-// The "Pick" tab: filters at the top, then either the Pick button, the
-// result card, or the No match state. The picking itself happens in App,
-// which remembers what's been shown.
+// The "Pick" tab: the title and a Filters button, a row of face-down cards,
+// and the main button at the bottom. Tapping Pick for us spins the cards and
+// flips one over. The picking itself happens in App, which remembers what's
+// been shown; this screen handles how it looks.
 
 export default function Home({
   restaurants,
@@ -23,6 +25,12 @@ export default function Home({
   onUndoGoHere,
   onGoToList,
 }) {
+  const [sheetOpen, setSheetOpen] = useState(false)
+  // Where the cards are in their animation: idle, spinning, revealing or shown.
+  const [phase, setPhase] = useState('idle')
+  // The card sliding out after Pick another, until its animation ends.
+  const [leaving, setLeaving] = useState(null)
+
   if (restaurants.length === 0) {
     return (
       <div className="placeholder">
@@ -35,93 +43,107 @@ export default function Home({
     )
   }
 
+  // Mid-animation, the animation decides. Otherwise: a picked place shows face
+  // up (this also covers Go here on the want-to-go prompt), and no pick means
+  // the still row of cards.
+  const animating = phase === 'spinning' || phase === 'revealing'
+  const stage = animating ? phase : picked ? 'shown' : 'idle'
+  const noMatch = !picked && !animating && matches.length === 0 && canPick
+
+  function pickForUs() {
+    setLeaving(null)
+    onPick()
+    setPhase('spinning')
+  }
+
+  function pickAnother() {
+    setLeaving(picked)
+    onPick()
+  }
+
+  // How many kinds of filter are on, for the button's label.
+  const activeFilters =
+    (filters.cuisines.length > 0) + (filters.prices.length > 0) + (filters.maxMiles !== null)
+
   return (
     <div className="home">
-      <h1>Where to eat?</h1>
-      <Filters
-        filters={filters}
-        cuisineOptions={cuisineOptions}
-        locationStatus={locationStatus}
-        onChange={onFiltersChange}
-      />
+      <header className="screen-header">
+        <h1>Where to eat?</h1>
+        <button
+          className={activeFilters ? 'filter-button active' : 'filter-button'}
+          onClick={() => setSheetOpen(true)}
+          disabled={animating}
+        >
+          {activeFilters ? `Filters · ${activeFilters}` : 'Filters'}
+        </button>
+      </header>
 
-      {picked ? (
-        <ResultCard
-          restaurant={picked}
-          visits={visits}
-          went={went}
-          onGoHere={() => onGoHere(picked)}
-          onUndoGoHere={onUndoGoHere}
-          onPickAnother={onPick}
-        />
-      ) : matches.length === 0 && canPick ? (
-        <NoMatch
-          restaurants={restaurants}
-          filters={filters}
-          here={here}
-          onFiltersChange={onFiltersChange}
-        />
-      ) : (
-        <div className="pick-area">
-          <button className="primary big" onClick={onPick} disabled={!canPick}>
-            Pick for us
-          </button>
-          {canPick && (
+      <div className="stage-area">
+        {noMatch ? (
+          <NoMatch
+            restaurants={restaurants}
+            filters={filters}
+            here={here}
+            onFiltersChange={onFiltersChange}
+          />
+        ) : (
+          <CardCarousel
+            phase={stage}
+            picked={picked}
+            leaving={leaving}
+            visits={visits}
+            onSpinEnd={() => setPhase('revealing')}
+            onRevealEnd={() => setPhase('shown')}
+            onLeaveEnd={() => setLeaving(null)}
+          />
+        )}
+      </div>
+
+      <div className="home-actions">
+        {stage === 'shown' && went && (
+          <p className="saved-line">
+            Enjoy! Saved for today.{' '}
+            <button className="link" onClick={onUndoGoHere}>
+              Undo
+            </button>
+          </p>
+        )}
+        {stage === 'shown' && !went && (
+          <div className="button-row">
+            <button className="secondary big" onClick={pickAnother}>
+              Pick another
+            </button>
+            <button className="primary big" onClick={() => onGoHere(picked)}>
+              Go here
+            </button>
+          </div>
+        )}
+        {stage !== 'shown' && !noMatch && (
+          <>
+            <button className="primary big" onClick={pickForUs} disabled={!canPick || animating}>
+              Pick for us
+            </button>
             <p className="hint centered">
-              {matches.length === restaurants.length
-                ? `From all ${restaurants.length} places`
-                : `From ${matches.length} of ${restaurants.length} places`}
+              {!canPick && locationStatus === 'locating' && 'Finding your location…'}
+              {!canPick && locationStatus !== 'locating' && "Can't use your location. Change the distance filter."}
+              {canPick &&
+                (matches.length === restaurants.length
+                  ? `From all ${restaurants.length} places`
+                  : `From ${matches.length} of ${restaurants.length} places`)}
             </p>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
+          </>
+        )}
+      </div>
 
-// Once you tap Go here (`went`), the buttons give way to a quiet "Saved"
-// line, so there's nothing new to read.
-function ResultCard({ restaurant, visits, went, onGoHere, onUndoGoHere, onPickAnother }) {
-  // The last visit before today's plan, so the card doesn't flip to "today".
-  const lastVisit = lastVisitDate(
-    restaurant,
-    visits.filter((v) => v.status === 'confirmed'),
-  )
-  return (
-    <div className="pick-area">
-      <article className="result-card">
-        <p className="eyebrow">Let's go to</p>
-        <h2>{restaurant.name}</h2>
-        <p className="result-meta">
-          {[restaurant.cuisines.join(', '), '$'.repeat(restaurant.price)]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-        <p className="result-meta">
-          {lastVisit ? `Last visit: ${timeAgo(lastVisit)}` : 'No visits yet'}
-        </p>
-        {restaurant.notes && <p className="result-notes">{restaurant.notes}</p>}
-        <a className="directions" href={mapsLink(restaurant)} target="_blank" rel="noreferrer">
-          Directions in Google Maps ↗
-        </a>
-      </article>
-
-      {went ? (
-        <p className="saved-line">
-          Enjoy! Saved for today.{' '}
-          <button className="link" onClick={onUndoGoHere}>
-            Undo
-          </button>
-        </p>
-      ) : (
-        <>
-          <button className="primary big" onClick={onGoHere}>
-            Go here
-          </button>
-          <button className="secondary big" onClick={onPickAnother}>
-            Pick another
-          </button>
-        </>
+      {sheetOpen && (
+        <FilterSheet
+          filters={filters}
+          cuisineOptions={cuisineOptions}
+          locationStatus={locationStatus}
+          matchCount={matches.length}
+          onChange={onFiltersChange}
+          onClose={() => setSheetOpen(false)}
+        />
       )}
     </div>
   )

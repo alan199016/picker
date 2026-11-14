@@ -530,3 +530,340 @@ textarea {
   border-radius: 14px;
   text-align: center;
 }
+
+/* --- Pick tab: cards, carousel and reveal --- */
+
+:root {
+  /* Cards are 360px square, shrinking on narrow phones so the neighbors
+     still peek in at the sides. */
+  --card: min(360px, calc(100vw - 48px));
+  --card-gap: 16px;
+  /* How far the picked card rises when it flips. */
+  --lift: -24px;
+  /* The size the picked card grows to: nearly the full screen width (but no
+     more than 20% wider), and 30% taller, capped so it fits short phones. */
+  --grown-w: min(calc(var(--card) * 1.2), calc(100vw - 16px));
+  --grown-h: max(var(--card), min(calc(var(--card) * 1.3), calc(100dvh - 330px)));
+}
+
+/* Registering the card's width and height as lengths lets the browser
+   animate them smoothly from the small size to the grown one. */
+@property --hero-w {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --hero-h {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* The Pick tab fills the screen so the main button can sit at the bottom. */
+.screen.home-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+.home {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.home .screen-header h1 {
+  margin: 8px 0;
+}
+
+.filter-button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.filter-button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* The middle area grows to fill the space, with the cards centered in it. */
+.stage-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Spans the full screen width, past the page's side padding, so the next
+   cards can peek in from the edges. */
+.stage {
+  position: relative;
+  height: calc(var(--card) - var(--lift) + 8px);
+  margin: 0 -16px;
+  /* Hide cards past the screen's sides, but let them drop below while fading. */
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.card {
+  width: var(--card);
+  height: var(--card);
+  border-radius: 28px;
+  flex-shrink: 0;
+}
+
+.card-front {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.card-icon {
+  width: 55%;
+  height: 55%;
+}
+
+/* The row of face-down cards. Its left edge starts at the middle of the
+   stage, pulled back half a card, so card 0 sits dead center; then it's
+   shifted left by two cards so there are cards on both sides. */
+.strip {
+  position: absolute;
+  top: calc(-1 * var(--lift));
+  left: 50%;
+  margin-left: calc(var(--card) / -2);
+  display: flex;
+  gap: var(--card-gap);
+  transform: translateX(calc(-2 * (var(--card) + var(--card-gap))));
+}
+
+.slot {
+  flex-shrink: 0;
+}
+
+.card.hidden {
+  visibility: hidden;
+}
+
+.card.drop {
+  animation: drop-away 450ms ease-in forwards;
+}
+
+@keyframes drop-away {
+  to {
+    transform: translateY(90px);
+    opacity: 0;
+  }
+}
+
+/* The picked card, drawn on top of the row at exactly the middle card's spot.
+   It grows from its center: as --hero-w and --hero-h get bigger, the margins
+   pull it left and up by half the extra, so it stays centered. */
+.hero {
+  --hero-w: var(--card);
+  --hero-h: var(--card);
+  position: absolute;
+  top: calc(-1 * var(--lift) + (var(--card) - var(--hero-h)) / 2);
+  left: 50%;
+  margin-left: calc(var(--hero-w) / -2);
+  width: var(--hero-w);
+  height: var(--hero-h);
+  perspective: 1400px;
+}
+
+/* The two sides sit on top of each other; the back starts turned around.
+   backface-visibility hides whichever side faces away. */
+.flip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  /* Fill the card as it grows, instead of the fixed card size. */
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  overflow: hidden;
+}
+
+.card-back h2 {
+  font-size: 28px;
+  margin: 4px 0 12px;
+}
+
+.card-notes {
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  /* At most five lines, so long notes don't overflow the card. */
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-back .directions {
+  margin-top: auto;
+}
+
+/* The reveal: rise, grow, and turn over. */
+.hero.revealing {
+  animation: lift 700ms cubic-bezier(0.3, 0.7, 0.3, 1) forwards;
+}
+
+.hero.revealing .flip {
+  animation: turn-over 700ms cubic-bezier(0.3, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes lift {
+  to {
+    transform: translateY(var(--lift));
+    --hero-w: var(--grown-w);
+    --hero-h: var(--grown-h);
+  }
+}
+
+@keyframes turn-over {
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+/* Face up, raised and grown, after the reveal. */
+.hero.shown {
+  --hero-w: var(--grown-w);
+  --hero-h: var(--grown-h);
+  transform: translateY(var(--lift));
+}
+
+.hero.shown .flip {
+  transform: rotateY(180deg);
+}
+
+/* Pick another: the old card slides out left, shrinking to 80%; the new one
+   comes in from the right, growing from 80% to full size. */
+.hero.exit-left {
+  animation: exit-left 450ms ease-in forwards;
+}
+
+.hero.enter-right {
+  animation: enter-right 500ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes exit-left {
+  to {
+    transform: translate(calc(-50vw - 100%), var(--lift)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes enter-right {
+  from {
+    transform: translate(calc(50vw + 100%), var(--lift)) scale(0.8);
+  }
+}
+
+/* The bottom area keeps the same height in every state, so the cards above
+   don't jump when its buttons change. */
+.home-actions {
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+
+.home-actions .hint {
+  min-height: 1.3em;
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.button-row button {
+  flex: 1;
+}
+
+/* People who've asked their phone for less motion get quick fades instead. */
+@media (prefers-reduced-motion: reduce) {
+  .card.drop,
+  .hero.revealing,
+  .hero.revealing .flip,
+  .hero.exit-left,
+  .hero.enter-right {
+    animation-duration: 1ms;
+  }
+}
+
+/* --- Filter sheet --- */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.45);
+  animation: fade-in 200ms ease-out;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 85dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--bg);
+  animation: slide-up 280ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-header h2 {
+  margin: 0;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+}

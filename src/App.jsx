@@ -287,7 +287,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <main className="screen">
+      <main className={tab === 'home' ? 'screen home-screen' : 'screen'}>
         {tab === 'home' && (
           <Home
             restaurants={data.restaurants}
