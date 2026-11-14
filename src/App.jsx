@@ -6,6 +6,7 @@ import Home from './Home.jsx'
 import RestaurantDetail from './RestaurantDetail.jsx'
 import LaunchPrompt from './LaunchPrompt.jsx'
 import Backup from './Backup.jsx'
+import { addTestData } from './testData.js'
 import { chooseLaunchPrompt, useReopenAfterAway } from './launch.js'
 import { pickRestaurant } from './pick.js'
 import { NO_FILTERS, passesFilters } from './filters.js'
@@ -325,6 +326,8 @@ export default function App() {
             onAdd={() => setEditingId('new')}
             onOpen={(id) => setViewingId(id)}
             onBackup={() => setShowBackup(true)}
+            // Test version on your Mac only: the published app has no button.
+            onLoadTestData={import.meta.env.DEV ? () => setData(addTestData) : null}
           />
         )}
       </main>

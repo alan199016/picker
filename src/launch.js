@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 // this order, each skipped when it doesn't apply:
 //   1. "Did you end up going to X?"  (a Go here not yet confirmed)
 //   2. "You wanted to try X."        (a want-to-go flag)
-// The long-time-no-see nudge joins as 3 in the nudge step.
 
 const HOUR_MS = 60 * 60 * 1000
 

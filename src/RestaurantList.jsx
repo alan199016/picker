@@ -1,6 +1,6 @@
 // The "Restaurants" tab: every restaurant, A to Z, plus an Add button.
 
-export default function RestaurantList({ restaurants, onAdd, onOpen, onBackup }) {
+export default function RestaurantList({ restaurants, onAdd, onOpen, onBackup, onLoadTestData }) {
   const sorted = [...restaurants].sort((a, b) => a.name.localeCompare(b.name))
 
   return (
@@ -35,6 +35,15 @@ export default function RestaurantList({ restaurants, onAdd, onOpen, onBackup })
             </li>
           ))}
         </ul>
+      )}
+
+      {onLoadTestData && (
+        <div className="test-tools">
+          <button className="link" onClick={onLoadTestData}>
+            Load 20 test restaurants
+          </button>
+          <p className="hint">Only in the test version on your Mac. Replaces earlier test restaurants.</p>
+        </div>
       )}
     </div>
   )
