@@ -1,5 +1,7 @@
-/* Colors live in variables so dark mode only has to swap the values. */
+/* Colors live in variables so dark mode only has to swap the values.
+   Light or dark follows the phone's own setting. */
 :root {
+  color-scheme: light dark;
   --bg: #f6f5f2;
   --surface: #ffffff;
   --text: #1d1b19;
@@ -986,14 +988,17 @@ textarea {
   transform: translateY(calc(-2 * (var(--card) + var(--card-gap))));
 }
 
-.v2-stage .card.drop {
-  animation: fade-away 400ms ease-out forwards;
+/* Behind a picked card, the column dims and blurs; it clears when Choose
+   another flips the card back. Both ways take 300ms. */
+.v2-column {
+  transition:
+    filter 300ms ease,
+    opacity 300ms ease;
 }
 
-@keyframes fade-away {
-  to {
-    opacity: 0;
-  }
+.v2-column.dimmed {
+  filter: blur(8px);
+  opacity: 0.35;
 }
 
 /* The picked card sits in the middle of the screen as it grows. */
@@ -1025,8 +1030,8 @@ textarea {
   min-height: 0;
 }
 
-/* Spin again's first step: the reveal played backwards. The card shrinks and
-   flips face down while the other cards fade back in. Playing in reverse
+/* Choose another's first step: the reveal played backwards. The card shrinks and
+   flips face down while the other cards clear up again. Playing in reverse
    also flips the easing, so this curve is the reveal's curve mirrored: that
    way it still starts quickly and settles softly, like the reveal. */
 .hero.unrevealing {
@@ -1037,12 +1042,8 @@ textarea {
   animation: turn-over 700ms cubic-bezier(0.7, 0, 0.7, 0.3) reverse both;
 }
 
-.v2-stage .card.return {
-  animation: fade-away 400ms ease-in reverse both;
-}
-
 /* Sits just below the picked card. */
-.spin-again {
+.choose-another {
   position: absolute;
   top: calc(50% + var(--grown-h) / 2 + 16px);
   left: 50%;
@@ -1067,28 +1068,6 @@ textarea {
   margin-top: 14px;
 }
 
-/* Sideways swipes: the card leaves the way you swiped. */
-.hero.exit-right {
-  animation: exit-right 450ms ease-in forwards;
-}
-
-.hero.enter-left {
-  animation: enter-left 500ms cubic-bezier(0.2, 0.8, 0.3, 1);
-}
-
-@keyframes exit-right {
-  to {
-    transform: translate(calc(50vw + 100%), var(--lift)) scale(0.8);
-    opacity: 0;
-  }
-}
-
-@keyframes enter-left {
-  from {
-    transform: translate(calc(-50vw - 100%), var(--lift)) scale(0.8);
-  }
-}
-
 .v2-header,
 .v2-middle,
 .v2-bottom {
@@ -1106,7 +1085,7 @@ textarea {
   pointer-events: auto;
 }
 
-/* Title in the center, Filters pinned to the right. */
+/* Just the Filters button, pinned to the right. */
 .v2-header {
   display: flex;
   align-items: center;
@@ -1114,8 +1093,19 @@ textarea {
   min-height: 56px;
 }
 
-.v2-header h1 {
-  margin: 8px 0;
+/* Sits 24px above the picked card (at its grown size) and fades in with
+   the reveal. */
+.v2-card-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(50% + var(--grown-h) / 2 + 24px);
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  line-height: 1.1;
+  pointer-events: none;
+  animation: fade-in 300ms ease both;
 }
 
 .v2-header .filter-button {
@@ -1180,12 +1170,12 @@ textarea {
     animation: none;
   }
 
-  .v2-stage .card.drop,
-  .v2-stage .card.return,
   .hero.unrevealing,
-  .hero.unrevealing .flip,
-  .hero.exit-right,
-  .hero.enter-left {
+  .hero.unrevealing .flip {
     animation-duration: 1ms;
+  }
+
+  .v2-column {
+    transition-duration: 1ms;
   }
 }

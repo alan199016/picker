@@ -3,10 +3,9 @@ import CardCarouselV2 from './CardCarouselV2.jsx'
 import FilterSheet from './FilterSheet.jsx'
 import { NoMatch } from './Home.jsx'
 
-// Version 2 of the Pick tab: a centered title, a vertical column of cards,
-// and swipes instead of buttons. Swipe up to spin; once a place is showing,
-// swipe left or right for another, or tap Spin again. Takes the same props
-// as version 1.
+// Version 2 of the Pick tab: a centered title and a vertical column of cards.
+// Swipe up to spin; once a place is showing, tap Choose another for a new
+// spin. Takes the same props as version 1.
 
 const SWIPE_PX = 50 // how far a finger must travel to count as a swipe
 
@@ -29,10 +28,8 @@ export default function HomeV2({
 }) {
   const [sheetOpen, setSheetOpen] = useState(false)
   // Where the cards are in their animation: idle, spinning, revealing, shown,
-  // or unrevealing (Spin again's reverse of the reveal, before the next spin).
+  // or unrevealing (Choose another's reverse of the reveal, before the next spin).
   const [phase, setPhase] = useState('idle')
-  // The card sliding out after a sideways swipe, and which way it's going.
-  const [leaving, setLeaving] = useState(null)
   // Where the current touch (or mouse press) started.
   const swipeStart = useRef(null)
 
@@ -56,16 +53,15 @@ export default function HomeV2({
 
   function spin() {
     if (animating || noMatch || !canPick) return
-    setLeaving(null)
     onPick()
     setPhase('spinning')
   }
 
-  // Spin again: first play the reveal backwards (the card shrinks and flips
-  // face down, the other cards come back), then pick and spin once it's done.
-  function spinAgain() {
+  // Choose another: first play the reveal backwards (the card shrinks and
+  // flips face down, the other cards come back), then pick and spin once
+  // it's done.
+  function chooseAnother() {
     if (animating) return
-    setLeaving(null)
     setPhase('unrevealing')
   }
 
@@ -74,13 +70,9 @@ export default function HomeV2({
     setPhase('spinning')
   }
 
-  function pickAnother(direction) {
-    setLeaving({ restaurant: picked, direction })
-    onPick()
-  }
-
-  // Swipes: compare where the finger went up with where it went down. Pointer
-  // events cover fingers and the mouse, so dragging works on the Mac too.
+  // Swiping up starts the first spin. Compare where the finger went up with
+  // where it went down; pointer events cover fingers and the mouse, so
+  // dragging works on the Mac too.
   function handlePointerDown(event) {
     swipeStart.current = { x: event.clientX, y: event.clientY }
   }
@@ -92,10 +84,8 @@ export default function HomeV2({
     const dx = event.clientX - start.x
     const dy = event.clientY - start.y
     const upward = dy < -SWIPE_PX && Math.abs(dy) > Math.abs(dx)
-    const sideways = Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)
-    // Swiping up only starts the first spin; after that, Spin again does.
+    // Only before the first spin; after that, Choose another does it.
     if (upward && stage === 'idle') spin()
-    else if (sideways && stage === 'shown' && !animating) pickAnother(dx < 0 ? 'left' : 'right')
   }
 
   const activeFilters =
@@ -112,22 +102,19 @@ export default function HomeV2({
         <CardCarouselV2
           phase={stage}
           picked={picked}
-          leaving={leaving}
           visits={visits}
           went={went}
           onGoHere={onGoHere}
           onUndoGoHere={onUndoGoHere}
-          onSpinAgain={spinAgain}
+          onChooseAnother={chooseAnother}
           onUnrevealEnd={startSpinAfterUnreveal}
           onSpinEnd={() => setPhase('revealing')}
           onRevealEnd={() => setPhase('shown')}
-          onLeaveEnd={() => setLeaving(null)}
         />
       )}
 
-      {/* The title and Filters button hide while the cards spin. */}
+      {/* The Filters button hides while the cards spin. */}
       <header className={stage === 'spinning' ? 'v2-header quiet' : 'v2-header'}>
-        <h1>{stage === 'idle' ? 'Where to eat?' : 'Let’s go to…'}</h1>
         <button
           className={activeFilters ? 'filter-button active' : 'filter-button'}
           onClick={() => setSheetOpen(true)}
@@ -165,7 +152,6 @@ export default function HomeV2({
               : "Can't use your location. Change the distance filter."}
           </p>
         )}
-        {stage === 'shown' && <p className="hint centered">‹ Swipe for another ›</p>}
       </div>
 
       {sheetOpen && (

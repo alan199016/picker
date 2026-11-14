@@ -4,14 +4,16 @@ import { lastVisitDate, mapsLink, timeAgo } from './pick.js'
 // The card pieces both versions of the Pick screen are built from.
 
 // The row of face-down cards. During the reveal, a flipping copy takes the
-// middle card's place and the rest go away; while unrevealing, they come back.
-export function CardRow({ stripRef, phase }) {
+// middle card's place and the rest drop away, unless `keepOthers` is set
+// (version 2 keeps them on screen and dims them instead).
+export function CardRow({ stripRef, phase, keepOthers = false }) {
+  const settled = phase === 'revealing' || phase === 'shown' || phase === 'unrevealing'
   return (
     <div className="strip" ref={stripRef}>
       {Array.from({ length: CARD_COUNT }, (_, i) => {
         let className = 'card card-front'
-        if (phase === 'revealing') className += i === END ? ' hidden' : ' drop'
-        if (phase === 'unrevealing') className += i === END ? ' hidden' : ' return'
+        if (settled && i === END) className += ' hidden'
+        else if (phase === 'revealing' && !keepOthers) className += ' drop'
         // The outer slot gets resized by the carousel; the card inside is free
         // to run its own animation during the reveal.
         return (
