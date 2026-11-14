@@ -113,8 +113,9 @@ export default function HomeV2({
         />
       )}
 
-      {/* The Filters button hides while the cards spin. */}
-      <header className={stage === 'spinning' ? 'v2-header quiet' : 'v2-header'}>
+      {/* The Filters button only shows when it can be tapped: it hides while
+          the cards spin or flip either way. */}
+      <header className={animating ? 'v2-header quiet' : 'v2-header'}>
         <button
           className={activeFilters ? 'filter-button active' : 'filter-button'}
           onClick={() => setSheetOpen(true)}

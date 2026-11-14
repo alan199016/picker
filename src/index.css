@@ -602,6 +602,16 @@ textarea {
   font-weight: 600;
 }
 
+.filter-button {
+  transition: opacity 200ms ease;
+}
+
+/* Hidden while the cards animate. (More specific than the general
+   disabled-button style, which would otherwise leave it faintly visible.) */
+.filter-button.quiet:disabled {
+  opacity: 0;
+}
+
 .filter-button.active {
   border-color: var(--accent);
   color: var(--accent);

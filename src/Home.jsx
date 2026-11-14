@@ -69,8 +69,13 @@ export default function Home({
     <div className="home">
       <header className="screen-header">
         <h1>Where to eat?</h1>
+        {/* Only shown when it can be tapped: hidden while the cards spin and flip. */}
         <button
-          className={activeFilters ? 'filter-button active' : 'filter-button'}
+          className={[
+            'filter-button',
+            activeFilters ? 'active' : '',
+            animating ? 'quiet' : '',
+          ].join(' ')}
           onClick={() => setSheetOpen(true)}
           disabled={animating}
         >
