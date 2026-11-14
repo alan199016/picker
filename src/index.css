@@ -49,17 +49,22 @@ textarea {
 /* --- Page layout: content scrolls, tab bar stays at the bottom --- */
 
 .app {
-  min-height: 100dvh;
+  /* Exactly the screen's height (dvh follows the visible screen as browser
+     bars come and go). The content area scrolls inside it when it needs to,
+     so nothing ever slides under the tab bar. */
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   max-width: 560px;
   margin: 0 auto;
-  /* Keep clear of the iPhone notch and home bar. */
+  /* Keep clear of the phone's status bar. */
   padding-top: env(safe-area-inset-top);
 }
 
 .screen {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 16px;
 }
 
@@ -74,9 +79,17 @@ h1 {
   justify-content: space-between;
 }
 
+/* The tab bar has its own fixed-height row at the bottom; screens never
+   extend underneath it. Its height is a variable so version 2's full-screen
+   cards can stop right above it. */
+:root {
+  --tabs-h: calc(52px + env(safe-area-inset-bottom));
+}
+
 .tabs {
-  position: sticky;
-  bottom: 0;
+  position: relative;
+  flex-shrink: 0;
+  height: var(--tabs-h);
   display: flex;
   background: var(--surface);
   border-top: 1px solid var(--line);
@@ -85,7 +98,7 @@ h1 {
 
 .tabs button {
   flex: 1;
-  padding: 14px 0;
+  padding: 0;
   border: none;
   background: none;
   color: var(--muted);
@@ -536,9 +549,10 @@ textarea {
 /* --- Pick tab: cards, carousel and reveal --- */
 
 :root {
-  /* Cards are 360px square, shrinking on narrow phones so the neighbors
-     still peek in at the sides. */
-  --card: min(360px, calc(100vw - 48px));
+  /* Cards are 360px square. They shrink on narrow phones so the neighbors
+     still peek in at the sides, and on short phones so the whole Pick
+     screen (title, card and buttons) fits above the tab bar. */
+  --card: min(360px, calc(100vw - 48px), calc(100dvh - 330px));
   --card-gap: 16px;
   /* How far the picked card rises when it flips. */
   --lift: -24px;
@@ -953,7 +967,12 @@ textarea {
 /* The cards fill the whole screen, behind the title and the hint. */
 .v2-stage {
   position: fixed;
-  inset: 0;
+  /* From below the status bar to just above the tab bar, so the cards are
+     centered in the space you can see. */
+  top: env(safe-area-inset-top);
+  bottom: var(--tabs-h);
+  left: 0;
+  right: 0;
   z-index: 0;
   overflow: hidden;
   /* No rise in this version: the column already moves up. */
