@@ -50,6 +50,8 @@ export default function CardCarouselV2({
       <div className={dimmed ? 'v2-column dimmed' : 'v2-column'}>
         <CardRow stripRef={stripRef} phase={phase} keepOthers />
       </div>
+      <div className="v2-fade top" />
+      <div className="v2-fade bottom" />
 
       {/* "Let's go to" appears just above the card as it's revealed. */}
       {(phase === 'revealing' || phase === 'shown') && <h1 className="v2-card-title">Let’s go to</h1>}

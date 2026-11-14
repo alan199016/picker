@@ -58,7 +58,16 @@ export function useCardRow(stripRef, phase, axis, onSpinEnd, sideScale) {
     const strip = stripRef.current
     if (!strip) return
     const settled = phase === 'revealing' || phase === 'shown' || phase === 'unrevealing'
-    placeAt(strip, settled ? END : START, axis, sideScale)
+    const place = () => placeAt(strip, settled ? END : START, axis, sideScale)
+    place()
+
+    // Positions are worked out in pixels from the card size, which depends
+    // on the screen size. If the screen changes (rotating, or the phone's
+    // bars settling in right after launch), work them out again. Not mid-spin:
+    // the spin re-measures the cards on every frame anyway.
+    if (phase === 'spinning') return
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
   }, [phase, axis, stripRef, sideScale])
 
   // Always call the newest onSpinEnd, without restarting the spin when it changes.
